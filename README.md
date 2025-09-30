@@ -30,11 +30,13 @@ To use the search functionality, you need to provide your Chub.ai API token:
 2. Set up your Chub.ai API token (see Authentication Setup above)
 3. Use the extension buttons in the Extensions panel
 
-![image](https://github.com/city-unit/st-auto-tagger/assets/1860540/188b8ba5-c121-4357-96f8-a45bd60cf8a5)
+<img width="960" height="480" alt="sillytavern-extension-git-URL" src="https://github.com/user-attachments/assets/40081690-c466-4bbe-938e-3243a36e64ab" /><br>
 
-![image](https://github.com/city-unit/st-auto-tagger/assets/140349364/ba3e995e-054a-4d08-a85a-f03afa4bbb5b)
+<img width="480" height="720" alt="sillytavern-extension-git-URL" src="https://github.com/user-attachments/assets/ce491ed5-008a-4c91-9263-3d3582cc831d" />
 
-
+```
+https://github.com/pastor0711/st-auto-tagger-new-api.git
+```
 ## Prerequisites
 
 - **SillyTavern**: Latest version required
