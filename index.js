@@ -131,6 +131,24 @@ function onChubApiTokenInput() {
 }
 
 /**
+ * Toggles the visibility of collapsible content sections
+ * @param {string} sectionId - The ID of the collapsible section
+ */
+function toggleCollapsible(sectionId) {
+    const content = $(`#${sectionId}`);
+    const header = $(`.collapsible-header[onclick="toggleCollapsible('${sectionId}')"]`);
+    const icon = header.find('.collapsible-icon');
+
+    if (content.is(':visible')) {
+        content.slideUp(300);
+        icon.css('transform', 'rotate(-90deg)');
+    } else {
+        content.slideDown(300);
+        icon.css('transform', 'rotate(0deg)');
+    }
+}
+
+/**
  * Fetch character data from the API based on name and description.
  *
  * This function attempts to search for character data using multiple API endpoints.
@@ -629,4 +647,7 @@ jQuery(async () => {
     $("#skip_strategy").on("change", onSkipStratInput);
     $("#chub_api_token").on("input", onChubApiTokenInput);
     loadSettings();
+
+    // Make toggleCollapsible function globally available
+    window.toggleCollapsible = toggleCollapsible;
 });
