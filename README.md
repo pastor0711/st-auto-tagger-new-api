@@ -46,7 +46,7 @@ To use the search functionality, you need to provide your Chub.ai API token:
 **✅ FULLY FUNCTIONAL** - The extension has been updated and tested to work with Chub.ai's current API (as of 2025).
 
 **🔧 Recent Fixes:**
-- Fixed API endpoints for current Chub.ai gateway
+- Fixed API endpoints for the current Chub.ai gateway
 - Added proper authentication token support
 - Resolved parameter validation issues
 - Improved error handling and logging
@@ -74,7 +74,7 @@ The codebase includes docstrings to make it easier to understand the purpose and
 ## Credits
 
 - **Original Author**: [city-unit](https://github.com/city-unit) - Creator of the st-auto-tagger extension
-- **Current Maintainer**: [Cenkay/pastor0711](https://github.com/cenkay) - Updated and fixed for current Chub.ai API (2025)
+- **Current Maintainer**: [Cenkay/pastor0711](https://github.com/pastor0711) - Updated and fixed for the current Chub.ai API (2025)
 
 ## Support and Contributions
 
