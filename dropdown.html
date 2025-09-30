@@ -1,72 +1,250 @@
 <div class="auto-tagger-settings">
     <div class="inline-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
-            <b>Auto Tagger</b>
+            <b>🤖 Auto Tagger</b>
             <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
         </div>
         <div class="inline-drawer-content">
-
-
-            <div class="auto-tagger_block flex-container">
-                <input id="chub-import" class="menu_button" type="submit" value="Import All Character Info from CHUB" />
-            </div>
-            <div class="auto-tagger_block flex-container">
-                <input id="chub-import-single" class="menu_button" type="submit" value="Import Current Character Info from CHUB" />
-            </div>
-            <div class="auto-tagger_block flex-container">
-                <input id="get_creators_notes" type="checkbox" /> <!-- New checkbox for using alt description -->
-                <label for="get_creators_notes">Pull Creator's Notes from CHUB</label>
-            </div>
-            <div class="auto-tagger_block flex-container">
-                <input id="use_alt_desc" type="checkbox" /> <!-- New checkbox for using alt description -->
-                <label for="use_alt_desc">Use Tagline As Creator's Notes</label>
-            </div>
-            <!-- Collapsible Chub.ai API Token Section -->
-            <div class="auto-tagger_block flex-container">
-                <div class="collapsible-header" onclick="toggleCollapsible('chub-token-section')" style="width: 100%; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 8px; border-radius: 4px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
-                    <label for="chub_api_token" style="margin: 0; font-weight: 500; color: var(--text-color);">
-                        🔐 Chub.ai API Token Setup
-                    </label>
-                    <span class="collapsible-icon" style="font-size: 14px; color: var(--text-color-muted); display: inline-block; transition: transform 0.3s ease;">▼</span>
+            <!-- Main Action Buttons Section -->
+            <div class="auto-tagger-section" style="margin-bottom: 24px;">
+                <h4 style="margin: 0 0 16px 0; color: var(--text-color); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px;">🚀</span>
+                    Import Actions
+                </h4>
+                <div class="button-group" style="display: flex; flex-direction: column; gap: 12px;">
+                    <button id="chub-import" class="auto-tagger-button primary" style="
+                        padding: 12px 20px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+                    ">
+                        📥 Import All Character Info from CHUB
+                    </button>
+                    <button id="chub-import-single" class="auto-tagger-button secondary" style="
+                        padding: 12px 20px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        border: 2px solid var(--accent-color);
+                        border-radius: 8px;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                        background: transparent;
+                        color: var(--text-color);
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    ">
+                        🎯 Import Current Character Info from CHUB
+                    </button>
                 </div>
-                <div id="chub-token-section" class="collapsible-content" style="display: none; width: 100%; margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
-                    <div style="margin-bottom: 12px; font-size: 13px; line-height: 1.4; opacity: 0.8;">
-                        <strong style="color: var(--text-color);">🔑 How to get your token:</strong><br>
-                        <ol style="margin: 8px 0 0 0; padding-left: 20px;">
-                            <li>Open <a href="https://chub.ai" target="_blank" style="color: var(--link-color);">chub.ai</a> and log in</li>
-                            <li>Press <strong>F12</strong>, go to <strong>Application/Storage</strong> tab</li>
-                            <li>Click <strong>Local Storage</strong> → <strong>https://chub.ai</strong></li>
-                            <li>Find <strong>URQL_TOKEN</strong> and copy its value (the long string)</li>
-                            <li>Paste it in the field below</li>
-                        </ol>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="auto-tagger-section" style="margin-bottom: 24px;">
+                <h4 style="margin: 0 0 16px 0; color: var(--text-color); font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px;">⚙️</span>
+                    Import Settings
+                </h4>
+
+                <!-- Creator Info Options -->
+                <div class="settings-group" style="margin-bottom: 20px; padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border-left: 3px solid var(--accent-color);">
+                    <h5 style="margin: 0 0 12px 0; color: var(--text-color); font-size: 13px; font-weight: 600;">Creator Information</h5>
+                    <div class="checkbox-group" style="display: flex; flex-direction: column; gap: 8px;">
+                        <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text-color);">
+                            <input id="get_creators_notes" type="checkbox" style="margin: 0; accent-color: var(--accent-color);" />
+                            <span>Pull Creator's Notes from CHUB</span>
+                        </label>
+                        <label class="checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--text-color);">
+                            <input id="use_alt_desc" type="checkbox" style="margin: 0; accent-color: var(--accent-color);" />
+                            <span>Use Tagline As Creator's Notes</span>
+                        </label>
                     </div>
-                    <input id="chub_api_token" type="password" placeholder="Paste your Chub.ai token here..." style="width: 100%; padding: 8px; font-family: 'Courier New', monospace; font-size: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; color: var(--text-color);" />
+                </div>
+
+                <!-- Matching Strategy -->
+                <div class="settings-group" style="margin-bottom: 20px; padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border-left: 3px solid var(--accent-color);">
+                    <h5 style="margin: 0 0 12px 0; color: var(--text-color); font-size: 13px; font-weight: 600;">Skip Strategy</h5>
+                    <select id="skip_strategy" style="
+                        width: 100%;
+                        padding: 8px 12px;
+                        font-size: 13px;
+                        border: 1px solid rgba(255,255,255,0.2);
+                        border-radius: 6px;
+                        background: rgba(0,0,0,0.3);
+                        color: var(--text-color);
+                        cursor: pointer;
+                    ">
+                        <option title="If it has tags or author info, skip." value="0">Skip if Existing</option>
+                        <option title="Add the author info/notes to the end. Tags added." value="1">Append to Existing</option>
+                        <option title="Write over author info / notes. Doesn't affect tags." value="2">Overwrite Existing</option>
+                    </select>
+                </div>
+
+                <!-- Matching Parameters -->
+                <div class="settings-group" style="padding: 16px; background: rgba(255,255,255,0.02); border-radius: 8px; border-left: 3px solid var(--accent-color);">
+                    <h5 style="margin: 0 0 16px 0; color: var(--text-color); font-size: 13px; font-weight: 600;">Matching Parameters</h5>
+
+                    <div class="slider-group" style="margin-bottom: 16px;">
+                        <label class="slider-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; color: var(--text-color);">
+                            <span>Dice Threshold</span>
+                            <span class="slider-value" id="dice_threshold_value" style="font-weight: 600; color: var(--accent-color); background: rgba(102, 126, 234, 0.1); padding: 2px 8px; border-radius: 12px; min-width: 35px; text-align: center;"></span>
+                        </label>
+                        <input id="dice_threshold" type="range" min=".1" max="1" step=".1" style="
+                            width: 100%;
+                            height: 6px;
+                            border-radius: 3px;
+                            background: rgba(255,255,255,0.1);
+                            outline: none;
+                            -webkit-appearance: none;
+                            appearance: none;
+                        " />
+                    </div>
+
+                    <div class="slider-group">
+                        <label class="slider-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; color: var(--text-color);">
+                            <span>Search Width</span>
+                            <span class="slider-value" id="find_count_value" style="font-weight: 600; color: var(--accent-color); background: rgba(102, 126, 234, 0.1); padding: 2px 8px; border-radius: 12px; min-width: 35px; text-align: center;"></span>
+                        </label>
+                        <input id="find_count" type="range" min="1" max="40" style="
+                            width: 100%;
+                            height: 6px;
+                            border-radius: 3px;
+                            background: rgba(255,255,255,0.1);
+                            outline: none;
+                            -webkit-appearance: none;
+                            appearance: none;
+                        " />
+                    </div>
                 </div>
             </div>
-            <!-- Dropdown to determine strategy, tooltips to indicate what they do -->
-            <div class="auto-tagger_block flex-container">
-                <span>Skip Strategy?</span> </br>
-                <select id="skip_strategy">
-                    <option title="If it has tags or author info, skip." value="0">Skip if Existing</option>
-                    <option title="Add the author info/notes to the end. Tags added."value="1">Append to Existing</option>
-                    <option title="Write over author info / notes. Doesn't affect tags."value="2">Overwrite Existing</option>
-                </select>
-            </div>
-            <!-- A slider for the dice threshold -->
-            <div class="auto-tagger_block flex-container">
-                <label for="dice_threshold">Dice Threshold (<span id="dice_threshold_value"></span>)</label>
-                <input id="dice_threshold" type="range" min=".1" max="1" step=".1"/>
 
-            </div>
-            <!-- A slider for the number to search for threshold -->
-            <div class="auto-tagger_block flex-container">
-                <label for="find_count">Search Width (<span id="find_count_value"></span> characters)</label>
-                <input id="find_count" type="range" min="1" max="40"/>
+            <!-- API Token Section -->
+            <div class="auto-tagger-section" style="margin-bottom: 24px;">
+                <div class="collapsible-container">
+                    <div class="collapsible-header" onclick="toggleCollapsible('chub-token-section')" style="
+                        width: 100%;
+                        cursor: pointer;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 12px 16px;
+                        border-radius: 8px;
+                        background: rgba(255,255,255,0.05);
+                        border: 1px solid rgba(255,255,255,0.1);
+                        transition: all 0.2s ease;
+                    ">
+                        <label style="margin: 0; font-weight: 600; color: var(--text-color); font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 14px;">🔐</span>
+                            Chub.ai API Token Setup
+                        </label>
+                        <span class="collapsible-icon" style="font-size: 12px; color: var(--text-color-muted); display: inline-block; transition: transform 0.3s ease;">▼</span>
+                    </div>
+                    <div id="chub-token-section" class="collapsible-content" style="
+                        display: none;
+                        width: 100%;
+                        margin-top: 8px;
+                        padding: 16px;
+                        background: rgba(255,255,255,0.02);
+                        border-radius: 8px;
+                        border: 1px solid rgba(255,255,255,0.05);
+                    ">
+                        <div class="token-instructions" style="margin-bottom: 16px; font-size: 12px; line-height: 1.5; opacity: 0.9;">
+                            <div style="color: var(--text-color); font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                <span>🔑</span>
+                                How to get your token:
+                            </div>
+                            <ol style="margin: 8px 0 0 0; padding-left: 20px;">
+                                <li>Open <a href="https://chub.ai" target="_blank" style="color: var(--link-color); text-decoration: none;">chub.ai</a> and log in</li>
+                                <li>Press <strong>F12</strong>, go to <strong>Application/Storage</strong> tab</li>
+                                <li>Click <strong>Local Storage</strong> → <strong>https://chub.ai</strong></li>
+                                <li>Find <strong>URQL_TOKEN</strong> and copy its value (the long string)</li>
+                                <li>Paste it in the field below</li>
+                            </ol>
+                        </div>
+                        <input id="chub_api_token" type="password" placeholder="Paste your Chub.ai token here..." style="
+                            width: 100%;
+                            padding: 10px 12px;
+                            font-family: 'Courier New', monospace;
+                            font-size: 12px;
+                            background: rgba(0,0,0,0.3);
+                            border: 1px solid rgba(255,255,255,0.2);
+                            border-radius: 6px;
+                            color: var(--text-color);
+                            transition: border-color 0.2s ease;
+                        " />
+                    </div>
+                </div>
             </div>
 
-            <!-- New div for comparison results -->
-            <div id="comparison-results"></div>
-
-            <hr class="sysHR">
+            <!-- Status Section -->
+            <div class="auto-tagger-section">
+                <div id="comparison-results" style="min-height: 20px;"></div>
+            </div>
         </div>
     </div>
+</div>
+
+<style>
+/* Auto Tagger specific styles - scoped to this component */
+.auto-tagger-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.auto-tagger-button.primary:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.auto-tagger-button.secondary:hover {
+    background: var(--accent-color);
+    color: white;
+}
+
+.collapsible-header:hover {
+    background: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.15) !important;
+}
+
+.checkbox-label:hover {
+    color: var(--accent-color) !important;
+}
+
+.slider-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+}
+
+.slider-group input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+#chub_api_token:focus {
+    outline: none;
+    border-color: var(--accent-color) !important;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* Smooth transitions for collapsible sections */
+.collapsible-content {
+    transition: max-height 0.25s ease-in-out, opacity 0.25s ease-in-out;
+    overflow: hidden;
+    opacity: 1;
+    max-height: none;
+}
+
+.collapsible-header {
+    transition: all 0.2s ease;
+}
+</style>

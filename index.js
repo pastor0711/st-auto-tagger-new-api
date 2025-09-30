@@ -140,11 +140,34 @@ function toggleCollapsible(sectionId) {
     const icon = header.find('.collapsible-icon');
 
     if (content.is(':visible')) {
-        content.slideUp(300);
+        content.css('max-height', content.outerHeight() + 'px');
+        // Force reflow to ensure max-height is applied before transitioning
+        content[0].offsetHeight;
+        content.css({
+            'max-height': '0px',
+            'opacity': '0'
+        });
         icon.css('transform', 'rotate(-90deg)');
+        setTimeout(() => {
+            content.css('display', 'none');
+        }, 250);
     } else {
-        content.slideDown(300);
+        content.css('display', 'block');
+        const scrollHeight = content[0].scrollHeight;
+        content.css({
+            'max-height': '0px',
+            'opacity': '0'
+        });
+        // Force reflow
+        content[0].offsetHeight;
+        content.css({
+            'max-height': scrollHeight + 'px',
+            'opacity': '1'
+        });
         icon.css('transform', 'rotate(0deg)');
+        setTimeout(() => {
+            content.css('max-height', 'none');
+        }, 250);
     }
 }
 
