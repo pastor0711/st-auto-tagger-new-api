@@ -2,9 +2,14 @@ import { saveSettingsDebounced, getSettings, getRequestHeaders, getCharacters } 
 import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
 import { importTags } from "../../../tags.js";
 
+// Extension configuration
+const extensionFolderPath = new URL('.', import.meta.url).pathname.replace(/^\//, '');
+
 // Endpoint for API call
-const API_ENDPOINT_SEARCH = "https://api.chub.ai/api/characters/search";
-const API_ENDPOINT_DOWNLOAD = "https://api.chub.ai/api/characters/download";
+// Note: Gateway search endpoint is just /search, download is /api/characters/
+const API_ENDPOINT_SEARCH_OLD = "https://api.chub.ai/api/characters/search";
+const API_ENDPOINT_SEARCH_GATEWAY = "https://gateway.chub.ai/search";
+const API_ENDPOINT_DOWNLOAD = "https://gateway.chub.ai/api/characters/download";
 
 const defaultSettings = {
     useAltDescription: false,
@@ -12,6 +17,7 @@ const defaultSettings = {
     findCount: 10,
     diceThreshold: 0.8,
     skipStrategy: 0,
+    chubApiToken: '', // Optional Chub.ai authentication token
 };
 
 /**
@@ -66,6 +72,7 @@ async function loadSettings() {
     $("#find_count").val(extension_settings.tag_importer.findCount).trigger("input");
     $("#dice_threshold").val(extension_settings.tag_importer.diceThreshold).trigger("input");
     $("#skip_strategy").val(extension_settings.tag_importer.skipStrategy);
+    $("#chub_api_token").val(extension_settings.tag_importer.chubApiToken || '');
 }
 
 /**
@@ -112,46 +119,171 @@ function onSkipStratInput() {
     saveSettingsDebounced();
 }
 
+function onChubApiTokenInput() {
+    const value = $(this).val().trim();
+    extension_settings.tag_importer.chubApiToken = value;
+    saveSettingsDebounced();
+    if (value) {
+        console.log("Chub.ai API token set successfully");
+    } else {
+        console.log("Chub.ai API token cleared");
+    }
+}
+
 /**
  * Fetch character data from the API based on name and description.
  *
- * This function sends two separate requests to the API to search for character data based on name and description.
- * The function expects a name and description string as input, and returns a Promise that resolves to an array
- * of character data objects. The function searches for both the name and the first 40 characters of the description.
- * If both searches return results, the function combines the results into a single array. If only one search returns
- * results, the function returns the results from that search. If neither search returns results, the function returns
- * an empty array.
+ * This function attempts to search for character data using multiple API endpoints.
+ * It tries the old api.chub.ai endpoint first, then falls back to gateway.chub.ai if needed.
+ * The function searches for both the name and the first 40 characters of the description.
+ * If both searches return results, the function combines the results into a single array.
  *
  * @param {string} name - The name of the character to search for.
  * @param {string} description - The description of the character to search for.
  * @returns {Promise<Object[]>} - A Promise that resolves to an array of character data objects.
  */
 async function fetchCharacterData(name, description) {
-    let name_response = await fetch(
-        `${API_ENDPOINT_SEARCH}?search=${encodeURIComponent(name)}&first=${
-            extension_settings.tag_importer.findCount
-        }&nsfw=true&venus=true`
-    );
-    let name_data = await name_response.json();
-
-    // now search for the first 40 characters of the description
-    description = description.substring(0, 40);
-    let char_response = await fetch(
-        `${API_ENDPOINT_SEARCH}?search=${encodeURIComponent(description)}&first=${
-            extension_settings.tag_importer.findCount
-        }&nsfw=true&venus=true`
-    );
-    let char_data = await char_response.json();
-
     let data = [];
+    
+    // Use the new gateway API with complete parameters from chub.ai website
+    try {
+        console.log(`Searching for character: ${name}`);
+        
+        // Build search URL with valid parameters only
+        const searchParams = new URLSearchParams({
+            first: extension_settings.tag_importer.findCount,
+            page: 1,
+            namespace: 'characters',
+            search: name,
+            include_forks: true,
+            nsfw: true,
+            nsfw_only: false,
+            require_custom_prompt: false,
+            require_example_dialogues: false,
+            require_images: false,
+            require_expressions: false,
+            nsfl: true,
+            asc: false,
+            min_ai_rating: 0,
+            min_tokens: 50,
+            max_tokens: 100000,
+            chub: true,
+            require_lore: false,
+            require_lore_embedded: false,
+            require_lore_linked: false,
+            sort: 'default',
+            min_tags: 0,
+            inclusive_or: false,
+            recommended_verified: false,
+            require_alternate_greetings: false,
+            count: false,
+        });
+        
+        // Build headers with optional authentication
+        const headers = {
+            "Accept": "application/json",
+        };
+        
+        // Add authentication if token is provided
+        if (extension_settings.tag_importer.chubApiToken) {
+            // Try different header formats - different APIs use different conventions
+            headers["Authorization"] = `Bearer ${extension_settings.tag_importer.chubApiToken}`;
+            console.log(`🔐 Authenticating with token: ${extension_settings.tag_importer.chubApiToken.substring(0, 8)}...`);
+        } else {
+            console.log("⚠️ No auth token provided - search results may be limited");
+        }
+        
+        let name_response = await fetch(`${API_ENDPOINT_SEARCH_GATEWAY}?${searchParams.toString()}`, {
+            method: "GET",
+            headers: headers,
+            credentials: "omit", // Always omit - token is sent in headers instead
+        });
 
-    if (name_data.nodes?.length > 0 && char_data.nodes?.length > 0) {
-        data = [...name_data.nodes, ...char_data.nodes];
-    } else if (name_data.nodes?.length > 0) {
-        data = name_data.nodes;
-    } else if (char_data.nodes?.length > 0) {
-        data = char_data.nodes;
+        if (name_response.ok) {
+            let name_result = await name_response.json();
+            // Gateway API returns { data: { nodes: [...] } }
+            let name_data = name_result.data || name_result;
+            
+            console.log(`Name search returned ${name_data.nodes?.length || 0} results`);
+            
+            // Log if we got authenticated results
+            if (extension_settings.tag_importer.chubApiToken && name_data.nodes?.length > 0) {
+                console.log("✅ Authentication successful - receiving search results");
+            }
+            
+            // Search for the first 40 characters of the description
+            description = description.substring(0, 40);
+            const descParams = new URLSearchParams({
+                first: extension_settings.tag_importer.findCount,
+                page: 1,
+                namespace: 'characters',
+                search: description,
+                include_forks: true,
+                nsfw: true,
+                nsfw_only: false,
+                require_custom_prompt: false,
+                require_example_dialogues: false,
+                require_images: false,
+                require_expressions: false,
+                nsfl: true,
+                asc: false,
+                min_ai_rating: 0,
+                min_tokens: 50,
+                max_tokens: 100000,
+                chub: true,
+                require_lore: false,
+                require_lore_embedded: false,
+                require_lore_linked: false,
+                sort: 'default',
+                min_tags: 0,
+                inclusive_or: false,
+                recommended_verified: false,
+                require_alternate_greetings: false,
+                count: false,
+            });
+            
+            // Reuse the same headers with authentication
+            let char_response = await fetch(`${API_ENDPOINT_SEARCH_GATEWAY}?${descParams.toString()}`, {
+                method: "GET",
+                headers: headers, // Use the same headers as name search
+                credentials: "omit", // Always omit - token is sent in headers instead
+            });
+            let char_result = char_response.ok ? await char_response.json() : { data: { nodes: [] } };
+            // Gateway API returns { data: { nodes: [...] } }
+            let char_data = char_result.data || char_result;
+            
+            console.log(`Description search returned ${char_data.nodes?.length || 0} results`);
+
+            if (name_data.nodes?.length > 0 && char_data.nodes?.length > 0) {
+                data = [...name_data.nodes, ...char_data.nodes];
+            } else if (name_data.nodes?.length > 0) {
+                data = name_data.nodes;
+            } else if (char_data.nodes?.length > 0) {
+                data = char_data.nodes;
+            }
+            
+            console.log(`✅ Search successful! Found ${data.length} potential matches (combined from both searches)`);
+        } else {
+            // Log detailed error information
+            const errorText = await name_response.text();
+            console.error(`Search API returned ${name_response.status}: ${name_response.statusText}`);
+            console.error(`Response body:`, errorText);
+            
+            if (name_response.status === 422) {
+                console.error("⚠️ 422 Error - Possible causes:");
+                console.error("1. Token might be invalid or expired");
+                console.error("2. API might not accept authentication from localhost");
+                console.error("3. Wrong authentication header format");
+                console.error("Headers sent:", headers);
+            }
+            
+            toastr.warning(`Search returned ${name_response.status} error. Check console for details.`);
+        }
+    } catch (error) {
+        console.error("Character search failed:", error);
+        toastr.error("Failed to search Chub.ai. Check console for details.");
     }
+    
     return data;
 }
 
@@ -166,8 +298,10 @@ async function fetchCharacterData(name, description) {
  * @returns {Promise<Object>} - A Promise that resolves to the downloaded character data.
  */
 async function downloadCharacterFallback(fullPath) {
-    const url = `https://api.chub.ai/api/characters/${fullPath}?full=true`;
+    const url = `https://gateway.chub.ai/api/characters/${fullPath}?full=true`;
 
+    console.log(`Downloading character from: ${url}`);
+    
     const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -175,17 +309,29 @@ async function downloadCharacterFallback(fullPath) {
         },
     });
 
+    if (!response.ok) {
+        throw new Error(`Failed to fetch character from gateway: ${response.statusText}`);
+    }
+
     const data = await response.json();
-    console.log(data);
-    // Map the data to the expected format
+    console.log("Raw API response:", data);
+    
+    // Map the data to the expected format based on the actual gateway API response structure
+    // Response structure: { node: { definition: {...}, description: "...", topics: [...] } }
     const mappedData = {
-        definition: data.node.definition.example_dialogs,
-        greeting: data.node.definition.first_message,
-        title: data.node.definition.tavern_personality,
-        description: data.node.description,
-        personality: data.node.definition.personality,
+        definition: data.node?.definition?.example_dialogs || '',
+        greeting: data.node?.definition?.first_message || '',
+        title: data.node?.definition?.personality || data.node?.name || '',
+        description: data.node?.description || data.node?.definition?.description || '',
+        personality: data.node?.definition?.personality || '',
+        // IMPORTANT: Include topics for tag import
+        topics: data.node?.topics || [],
+        fullPath: data.node?.fullPath || fullPath,
+        name: data.node?.name || '',
     };
-    console.log(mappedData);
+    
+    console.log("Mapped character data:", mappedData);
+    console.log(`Found ${mappedData.topics.length} topics/tags:`, mappedData.topics);
     return mappedData;
 }
 
@@ -202,30 +348,8 @@ async function downloadCharacterFallback(fullPath) {
  * @returns {Promise<Object>} - A Promise that resolves to the downloaded character data.
  */
 async function downloadCharacter(fullPath) {
-    try {
-        const response = await fetch(API_ENDPOINT_DOWNLOAD, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                format: "cai",
-                fullPath: fullPath,
-                version: "main",
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to download character from primary API.");
-        }
-
-        const data = await response.json();
-        return data;
-
-    } catch (error) {
-        console.warn("Primary API failed. Trying the fallback API...", error);
-        return downloadCharacterFallback(fullPath);
-    }
+    // Gateway API doesn't support POST /download, so use GET with fullPath directly
+    return downloadCharacterFallback(fullPath);
 }
 
 
@@ -258,7 +382,13 @@ async function onCImportButtonClick(importType = "all") {
     if (importType !== "single") {
         characters = await getContext().characters;
     } else {
-        characters = [await getContext().characters[getContext().characterId]];
+        const currentChar = await getContext().characters[getContext().characterId];
+        if (!currentChar) {
+            toastr.error("No character selected");
+            console.error("No character selected");
+            return;
+        }
+        characters = [currentChar];
     }
 
     let importCreatorInfo = extension_settings.tag_importer.getCreatorsNote;
@@ -266,6 +396,12 @@ async function onCImportButtonClick(importType = "all") {
 
     try {
         for (let character of characters) {
+            // Skip if character is undefined
+            if (!character) {
+                console.warn("Skipping undefined character");
+                continue;
+            }
+            
             // If the character already has a creator, tags, or creator notes, skip it
             if (
                 extension_settings.tag_importer.skipStrategy == 0 &&
@@ -285,7 +421,15 @@ async function onCImportButtonClick(importType = "all") {
                 }
             }
             if (!found) {
-                toastr.warning(`No match found for ${character.name}`);
+                console.log(`No match found for ${character.name} - searched ${searchedCharacters.length} characters`);
+                if (searchedCharacters.length === 0) {
+                    toastr.warning(
+                        `Character search returned no results. The Chub.ai search API may be temporarily unavailable.`,
+                        `No match for ${character.name}`
+                    );
+                } else {
+                    toastr.warning(`Searched ${searchedCharacters.length} characters but found no match`, `No match for ${character.name}`);
+                }
             }
         }
     } catch (error) {
@@ -319,12 +463,19 @@ async function processCharacter(searchedCharacter, character, importCreatorInfo,
         const isGreetingMatch = isMatch(character.first_mes || "", downloadedCharacter.greeting || "");
 
         if (checkMatch([isPersonalityMatch, isDescriptionMatch, isScenarioMatch, isGreetingMatch, isAuthorMatch, fallbackDescriptionMatch])) {
+            // Use topics from downloaded character since it has the full data including topics
+            const characterDataWithTopics = {
+                ...searchedCharacter,
+                topics: downloadedCharacter.topics || searchedCharacter.topics || [],
+                fullPath: downloadedCharacter.fullPath || searchedCharacter.fullPath || "",
+            };
+            
             await importData(
                 character,
-                searchedCharacter,
+                characterDataWithTopics,
                 importCreatorInfo,
                 author,
-                useAltDescription ? (searchedCharacter.tagline || "") : (downloadedCharacter.description || "") //Something is wrong with this, but the api doesn't work, so I can't fix it.
+                useAltDescription ? (searchedCharacter.tagline || "") : (downloadedCharacter.description || "")
             );
             return true;
         } else {
@@ -462,7 +613,7 @@ function getAuthorFromPath(fullPath) {
 }
 
 jQuery(async () => {
-    const settingsHtml = await $.get("scripts/extensions/third-party/st-auto-tagger/dropdown.html");
+    const settingsHtml = await $.get(`${extensionFolderPath}dropdown.html`);
     // Append settingsHtml to extensions_settings
     $("#extensions_settings2").append(settingsHtml);
     $("#chub-import").on("click", function () {
@@ -476,5 +627,6 @@ jQuery(async () => {
     $("#find_count").on("input", onFindCountInput);
     $("#dice_threshold").on("input", onDiceThresholdInput);
     $("#skip_strategy").on("change", onSkipStratInput);
+    $("#chub_api_token").on("input", onChubApiTokenInput);
     loadSettings();
 });

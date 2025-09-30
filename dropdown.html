@@ -21,6 +21,21 @@
                 <input id="use_alt_desc" type="checkbox" /> <!-- New checkbox for using alt description -->
                 <label for="use_alt_desc">Use Tagline As Creator's Notes</label>
             </div>
+            <!-- Chub.ai API Token Input -->
+            <div class="auto-tagger_block flex-container">
+                <label for="chub_api_token" style="width: 100%;">
+                    Chub.ai API Token (Optional - Required for Search)
+                    <small style="display: block; opacity: 0.7; margin-top: 4px;">
+                        <strong>How to get your token:</strong><br>
+                        1. Open <a href="https://chub.ai" target="_blank">chub.ai</a> and log in<br>
+                        2. Press <strong>F12</strong>, go to <strong>Application/Storage</strong> tab<br>
+                        3. Click <strong>Local Storage</strong> → <strong>https://chub.ai</strong><br>
+                        4. Find <strong>URQL_TOKEN</strong> and copy its value (the long string)<br>
+                        5. Paste it in the field below
+                    </small>
+                </label>
+                <input id="chub_api_token" type="password" placeholder="Paste your Chub.ai token here" style="width: 100%; margin-top: 8px; padding: 6px; font-family: monospace;" />
+            </div>
             <!-- Dropdown to determine strategy, tooltips to indicate what they do -->
             <div class="auto-tagger_block flex-container">
                 <span>Skip Strategy?</span> </br>
