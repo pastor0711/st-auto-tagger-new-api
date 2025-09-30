@@ -74,7 +74,7 @@ The codebase includes docstrings to make it easier to understand the purpose and
 ## Credits
 
 - **Original Author**: [city-unit](https://github.com/city-unit) - Creator of the st-auto-tagger extension
-- **Current Maintainer**: [Cenkay/pastor0711](https://github.com/cenkay) - Updated and fixed for the current Chub.ai API (2025)
+- **Current Maintainer**: [Cenkay/pastor0711](https://github.com/pastor0711) - Updated and fixed for the current Chub.ai API (2025)
 
 ## Support and Contributions
 
